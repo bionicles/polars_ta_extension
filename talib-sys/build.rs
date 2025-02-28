@@ -156,7 +156,7 @@ fn main() {
                 .filter_map(|e| e.ok())
                 .for_each(|x| println!("> {}", x.display()));
 
-            let output = Command::new("ls").arg("-la").output()?;
+            let output = Command::new("ls").arg("-la").output();
             println!("output: {output:#?}");
 
             Command::new("./configure")
