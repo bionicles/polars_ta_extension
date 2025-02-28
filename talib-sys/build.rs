@@ -41,7 +41,9 @@ fn main() {
     #[cfg(target_os = "windows")]
     let ta_lib_gz = format!("ta-lib-{TA_LIB_VER}-msvc.zip");
     #[cfg(target_os = "windows")]
-    let ta_lib_url = format!("https://github.com/Yvictor/polars_ta_extension/releases/download/0.1.0/{ta_lib_gz}");
+    let ta_lib_url = format!(
+        "https://github.com/Yvictor/polars_ta_extension/releases/download/0.1.0/{ta_lib_gz}"
+    );
     #[cfg(target_family = "unix")]
     let ta_lib_gz = format!("ta-lib-{TA_LIB_VER}-src.tar.gz");
     #[cfg(target_family = "unix")]
@@ -70,6 +72,7 @@ fn main() {
     let lib_path = PathBuf::from(ta_library_path.clone());
     let os = std::env::consts::OS;
     if !lib_path.exists() {
+        println!("{lib_path:#?} does not exist!");
         let mut file_gz = std::fs::File::open(file_gz_path).unwrap();
         if os == "windows" {
             if !lib_path.join("ta_lib.lib").exists() {
@@ -94,7 +97,9 @@ fn main() {
                 fs_extra::dir::copy(
                     &tmp_dir.join("ta-lib").join("c").join("lib"),
                     deps_dir.clone(),
-                    &fs_extra::dir::CopyOptions::new().overwrite(true).skip_exist(true),
+                    &fs_extra::dir::CopyOptions::new()
+                        .overwrite(true)
+                        .skip_exist(true),
                 )
                 .unwrap();
                 let dir_content = fs_extra::dir::get_dir_content(deps_dir.clone()).unwrap();
@@ -150,6 +155,9 @@ fn main() {
                 })
                 .filter_map(|e| e.ok())
                 .for_each(|x| println!("> {}", x.display()));
+
+            let output = Command::new("ls").arg("-la").output()?;
+            println!("output: {output:#?}");
 
             Command::new("./configure")
                 .arg(format!("--prefix={}", deps_dir.display()))
