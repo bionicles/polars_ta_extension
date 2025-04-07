@@ -12,6 +12,6 @@ repository = "https://github.com/Yvictor/polars_ta_extension"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-derive_builder = "0.20.2"
-serde = { version = "1.0", features = ["derive"] }
-talib-sys = { version = "0.1.0", path = "../talib-sys"}
+derive_builder = "0.20"
+serde = { version = "1", features = ["derive"] }
+talib-sys = { version = "0.1", path = "../talib-sys"}
