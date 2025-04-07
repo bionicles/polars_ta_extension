@@ -15,9 +15,7 @@ struct DerivesCallback;
 impl ParseCallbacks for DerivesCallback {
     // Test the "custom derives" capability by adding `PartialEq` to the `Test` struct.
     fn add_derives(&self, info: &DeriveInfo<'_>) -> Vec<String> {
-        if info.name.starts_with("_") {
-            vec![]
-        } else if info.kind == TypeKind::Struct {
+        if info.name.starts_with("_") || info.kind == TypeKind::Struct {
             vec![]
         } else if info.name == "TA_RangeType"
             || info.name == "TA_CandleSettingType"
@@ -38,6 +36,8 @@ impl ParseCallbacks for DerivesCallback {
 }
 
 fn main() {
+    println!("cargo:rustc-cdylib-link-arg=--no-size_t-is-usize");
+
     #[cfg(target_os = "windows")]
     let ta_lib_gz = format!("ta-lib-{TA_LIB_VER}-msvc.zip");
     #[cfg(target_os = "windows")]
@@ -78,11 +78,11 @@ fn main() {
             if !lib_path.join("ta_lib.lib").exists() {
                 let metadata = std::fs::File::metadata(&file_gz).expect("unable to read metadata");
                 let mut buf = vec![0; metadata.len() as usize];
-                file_gz.read(&mut buf).expect("buffer overflow");
+                let read_amount = file_gz.read(&mut buf).expect("buffer overflow");
                 zip_extract::extract(Cursor::new(buf), &tmp_dir, false).unwrap();
                 Command::new("nmake")
                     .current_dir(
-                        &tmp_dir
+                        tmp_dir
                             .join("ta-lib")
                             .join("c")
                             .join("make")
@@ -95,7 +95,7 @@ fn main() {
                 // nmake and clang
                 // set LIBCLANG_PATH=bin
                 fs_extra::dir::copy(
-                    &tmp_dir.join("ta-lib").join("c").join("lib"),
+                    tmp_dir.join("ta-lib").join("c").join("lib"),
                     deps_dir.clone(),
                     &fs_extra::dir::CopyOptions::new()
                         .overwrite(true)
@@ -111,14 +111,14 @@ fn main() {
                     println!("{}", f);
                 }
                 fs_extra::dir::copy(
-                    &tmp_dir.join("ta-lib").join("c").join("include"),
+                    tmp_dir.join("ta-lib").join("c").join("include"),
                     deps_dir.clone(),
                     &fs_extra::dir::CopyOptions::new().skip_exist(true),
                 )
                 .unwrap();
                 let _ = std::fs::create_dir_all(PathBuf::from(&ta_include_path).join("ta-lib"));
                 fs_extra::dir::copy(
-                    &PathBuf::from(&ta_include_path),
+                    PathBuf::from(&ta_include_path),
                     PathBuf::from(&ta_include_path).join("ta-lib"),
                     &fs_extra::dir::CopyOptions::new()
                         .skip_exist(true)
@@ -161,18 +161,18 @@ fn main() {
 
             Command::new("./configure")
                 .arg(format!("--prefix={}", deps_dir.display()))
-                .current_dir(&tmp_dir.join("ta-lib"))
+                .current_dir(tmp_dir.join("ta-lib"))
                 .status()
                 .expect("Failed to run configure command");
 
             Command::new("make")
-                .current_dir(&tmp_dir.join("ta-lib"))
+                .current_dir(tmp_dir.join("ta-lib"))
                 .status()
                 .expect("Failed to run make command");
 
             Command::new("make")
                 .arg("install")
-                .current_dir(&tmp_dir.join("ta-lib"))
+                .current_dir(tmp_dir.join("ta-lib"))
                 .status()
                 .expect("Failed to run make install command");
         }
