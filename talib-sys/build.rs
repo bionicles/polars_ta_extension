@@ -182,14 +182,14 @@ fn main() {
 
     println!("cargo:rustc-link-lib=static=ta_lib");
     println!("cargo:rustc-link-search=native={ta_library_path}");
-    println!("cargo:rustc-link-search=native=../dependencies/lib");
+    println!("cargo:rustc-link-search=native=./dependencies/lib");
     // let cb = ParseCallbacks::add_derives();
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
         .clang_arg(format!("-I{}", ta_include_path))
-        .clang_arg("-I../dependencies/include")
+        .clang_arg("-I./dependencies/include")
         .clang_arg("-v")
         // Generate rustified enums
         // .newtype_enum("*")
