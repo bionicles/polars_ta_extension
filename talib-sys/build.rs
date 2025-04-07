@@ -36,6 +36,7 @@ impl ParseCallbacks for DerivesCallback {
 }
 
 fn main() {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     // println!("cargo:rustc-cdylib-link-arg=--no-size_t-is-usize");
     // println!("cargo:rustc-link-lib=static=ta_lib");
     // #[cfg(target_family = "unix")]
@@ -53,16 +54,31 @@ fn main() {
         "https://github.com/Yvictor/polars_ta_extension/releases/download/0.1.0/{ta_lib_gz}"
     );
 
-    let cwd = env::current_dir().unwrap();
-    let deps_dir = PathBuf::from(
-        &env::var("DEPS_PATH").unwrap_or(cwd.join("dependencies").display().to_string()),
-    );
+    // let cwd = env::current_dir().unwrap();
+    // let deps_dir = PathBuf::from(
+    //     &env::var("DEPS_PATH").unwrap_or(cwd.join("dependencies").display().to_string()),
+    // );
+    let deps_dir_base = env::var("DEPS_PATH")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| out_dir.join("dependencies"));
+    let deps_dir = PathBuf::from(&deps_dir_base); // Keep using deps_dir for build steps
+
+    let ta_library_path_default = deps_dir.join("lib");
+    let ta_library_path = env::var("TA_LIBRARY_PATH")
+        .map(PathBuf::from)
+        .unwrap_or(ta_library_path_default);
+
+    let ta_include_path_default = deps_dir.join("include");
+    let ta_include_path = env::var("TA_INCLUDE_PATH")
+        .map(PathBuf::from)
+        .unwrap_or(ta_include_path_default);
+
     let tmp_dir = deps_dir.join("tmp");
     let file_gz_path = tmp_dir.join(ta_lib_gz);
-    let ta_library_path =
-        env::var("TA_LIBRARY_PATH").unwrap_or(cwd.join("dependencies/lib").display().to_string());
-    let ta_include_path = env::var("TA_INCLUDE_PATH")
-        .unwrap_or(cwd.join("dependencies/include").display().to_string());
+    // let ta_library_path =
+    //     env::var("TA_LIBRARY_PATH").unwrap_or(cwd.join("dependencies/lib").display().to_string());
+    // let ta_include_path = env::var("TA_INCLUDE_PATH")
+    //     .unwrap_or(cwd.join("dependencies/include").display().to_string());
     if !file_gz_path.exists() {
         let resp = reqwest::blocking::get(ta_lib_url).unwrap();
         let content = resp.bytes().unwrap();
@@ -181,14 +197,17 @@ fn main() {
     }
 
     println!("cargo:rustc-link-lib=static=ta_lib");
-    println!("cargo:rustc-link-search=native={ta_library_path}");
+    println!(
+        "cargo:rustc-link-search=native={}",
+        ta_library_path.display()
+    );
     println!("cargo:rustc-link-search=native=./dependencies/lib");
     // let cb = ParseCallbacks::add_derives();
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header("wrapper.h")
-        .clang_arg(format!("-I{}", ta_include_path))
+        .clang_arg(format!("-I{}", ta_include_path.display()))
         .clang_arg("-I./dependencies/include")
         .clang_arg("-v")
         // Generate rustified enums
