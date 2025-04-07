@@ -36,10 +36,10 @@ impl ParseCallbacks for DerivesCallback {
 }
 
 fn main() {
-    println!("cargo:rustc-cdylib-link-arg=--no-size_t-is-usize");
-    println!("cargo:rustc-link-lib=static=ta_lib");
-    #[cfg(target_family = "unix")]
-    println!("cargo:rustc-link-search=native=/usr/lib/ta_lib.a");
+    // println!("cargo:rustc-cdylib-link-arg=--no-size_t-is-usize");
+    // println!("cargo:rustc-link-lib=static=ta_lib");
+    // #[cfg(target_family = "unix")]
+    // println!("cargo:rustc-link-search=native=/usr/lib/ta_lib.a");
     #[cfg(target_os = "windows")]
     let ta_lib_gz = format!("ta-lib-{TA_LIB_VER}-msvc.zip");
     #[cfg(target_os = "windows")]
