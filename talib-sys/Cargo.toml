@@ -26,4 +26,4 @@ fs_extra = "1"
 # rustc-cdylib-link-arg = "--no-size_t-is-usize"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib", "rlib", "staticlib"]
